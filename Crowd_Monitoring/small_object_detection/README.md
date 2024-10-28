@@ -33,13 +33,7 @@ Illustration of framework, [source](https://supervision.roboflow.com/develop/how
 
 The key advantage of using SAHI is that it is model-agnostic. SAHI can leverage today’s SOTA object detection models and whatever the SOTA model happens to be tomorrow!
 
-## Result on my implementation
-
-**YOLOv5 from T1/2024**
-![yolov5_t124](https://github.com/milieureka/redback-orion/blob/main/Crowd_Monitoring/small_object_detection/resources/base-yolov5.png)
-
-**YOLOv8 + SAHI**
-![yolov8_sahi](https://github.com/milieureka/redback-orion/blob/main/Crowd_Monitoring/small_object_detection/resources/yolov8%2Bsahi.png)
+## Object detection on specific image
 
 Only YOLOv8
 
@@ -50,7 +44,44 @@ YOLOv8 and SAHI
 ![yolo_predict](https://github.com/milieureka/redback-orion/blob/main/Crowd_Monitoring/small_object_detection/resources/yolov8nsahi.png)
 
 [source_code](https://github.com/milieureka/redback-orion/blob/main/Crowd_Monitoring/small_object_detection/model.ipynb)
+
+## Object detection on batch and video 
+[source_code](https://github.com/milieureka/redback-orion/blob/main/Crowd_Monitoring/small_object_detection/sahi_prediction.ipynb)
+### Setup and Installation
+Dependencies:
+
+-  `Python 3.10.12`
+- `fiftyone` for dataset exploration and manipulation.
+- `huggingface_hub` Python library for accessing models and datasets.
+- `ultralytics` official package for running YOLOv8 models, including inference and training.
+- `sahi` for slicing aided hyper inference.
+- `IPython` interactive shell capabilities, displaying rich media like videos.
+- `opencv-python` (cv2) reading and manipulating video and image frames.
+- `os` – for file management tasks.
+- [`video`](https://github.com/milieureka/redback-orion/blob/main/Crowd_Monitoring/small_object_detection/resources/Open%20Day%20at%20Deakin%20University%20(online-video-cutter.com).mp4) sample for inference on video. In my code, i download video and upload to Google drive directory.
+
+### Standard Inference with only YOLOv8
+![Base Model Predictions](https://github.com/milieureka/redback-orion/blob/main/Crowd_Monitoring/small_object_detection/resources/yolov8_predict.gif?raw=True)
+
+While the model does a pretty good job of detecting objects, it struggles with the small objects, especially people in the distance. This can happen with large images, as most detection models are trained on fixed-size images. As an example, YOLOv8 is trained on images with maximum side length $640$. When we feed it an image of size $1920$ x $1080$, the model will downsample the image to $640$ x $360$ before making predictions. This downsampling can cause small objects to be missed, as the model may not have enough information to detect them.
+
+### YOLOv8 + Slicing Aided Hyper Inference
+![Sliced Model Predictions](https://github.com/voxel51/fiftyone/blob/v0.24.1/docs/source/tutorials/images/sahi_slices.gif?raw=1)
+
+The results certainly look promising! From a few visual examples, slicing seems to improve the coverage of ground truth detections, and smaller slices in particular seem to lead to more of the `person` detections being captured.
+
 ## Evaluation
+
+![yolo_report](https://github.com/milieureka/redback-orion/blob/main/Crowd_Monitoring/small_object_detection/resources/report.png)
+
+Moving from the base model to small slice results shows a consistent trend: recall improves while precision decreases slightly. This indicates a shift toward capturing more true positives at the expense of slightly more false positives. The small slice model should be the best option for applications where detecting as many objects as possible is more critical than precision alone (e.g., for safety or surveillance in crowded scenes). 
+
+We can analyze more deep dive. Since YOLO model has difficulty with small objects, let’s examine how each of these approaches performs on objects smaller than 32×32 pixels.
+
+![yolo_sahi_report](https://github.com/milieureka/redback-orion/blob/main/Crowd_Monitoring/small_object_detection/resources/report%20on%20objects%20smaller%20than%2032×32%20pixels.png)
+
+Using SAHI results in a significantly higher recall for small objects while maintaining precision, which enhances the F1-score. This effect is particularly notable in person detections, where the F1-score increases threefold!
+
 # Reference
 Here’s the corrected version of your references, formatted consistently:
 
